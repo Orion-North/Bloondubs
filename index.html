@@ -13,6 +13,26 @@
             margin: 0;
             padding: 0;
         }
+        #map-container {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: max-content;
+        }
+
+        .tile {
+            width: 60px;
+            height: 60px;
+            background: #3498db;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
         #gameCanvas {
             background: #1a1a3a;
             border: 3px solid #ffffff;
@@ -25,6 +45,8 @@
 </head>
 <body>
     <h1>Rogue Waters</h1>
+    <div id="map-container"></div>
+    
     <canvas id="gameCanvas" width="800" height="400"></canvas>
     <div id="controls">
         <button onclick="playerAction('attack')">Attack</button>

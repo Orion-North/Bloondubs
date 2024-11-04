@@ -1,6 +1,10 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const mapSize = 5;
+const tileTypes = ["🌊", "🏝️", "💀", "💰"]; // Water, Island, Enemy, Treasure
+const mapContainer = document.getElementById("map-container");
+
 class Ship {
     constructor(name, health, attackPower, position, color) {
         this.name = name;
@@ -40,6 +44,43 @@ const enemyShip = new Ship("Dread Pirate's Ship", 80, 15, { x: 600, y: 100 }, "#
 
 function updateStatus(message) {
     document.getElementById("status").innerText = message;
+}
+
+// Generate and render the map
+function generateMap() {
+    mapContainer.innerHTML = ""; // Clear previous map if any
+    for (let i = 0; i < mapSize * mapSize; i++) {
+        const tile = document.createElement("div");
+        tile.classList.add("tile");
+
+        // Randomly assign a tile type
+        const tileType = tileTypes[Math.floor(Math.random() * tileTypes.length)];
+        tile.innerText = tileType;
+
+        // Set tile actions based on tile type
+        tile.addEventListener("click", () => handleTileClick(tileType));
+
+        mapContainer.appendChild(tile);
+    }
+}
+
+function handleTileClick(tileType) {
+    if (tileType === "💀") {
+        startCombat();
+    } else if (tileType === "💰") {
+        alert("You found treasure!");
+        // Add treasure collection logic here
+    } else if (tileType === "🏝️") {
+        alert("You discovered an island.");
+        // Add island exploration logic here
+    } else {
+        alert("Just open sea.");
+    }
+}
+
+function startCombat() {
+    updateStatus("Enemy encountered! Prepare for battle.");
+    draw();
 }
 
 // Draw ships on canvas
@@ -92,6 +133,9 @@ function playerAction(action) {
         updateStatus("Your ship has been destroyed!");
     }
 }
+
+// Generate the initial map
+generateMap();
 
 // Initial draw call to display ships at the start
 draw();
