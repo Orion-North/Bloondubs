@@ -1,4 +1,5 @@
 # Bloondubs
+![Screenshot 2024-11-05 001036](https://github.com/user-attachments/assets/8dd28aaa-23e9-42d4-ae3e-6654bf50e3be)
 
 **Bloondubs** is a browser-based naval adventure game where you explore uncharted waters, encounter mysterious events, and engage in thrilling ship-to-ship combat. Navigate treacherous seas, discover hidden treasures, and outmaneuver enemy vessels in your quest for maritime supremacy!
 
