@@ -3,7 +3,7 @@
 
 **Bloondubs** is a browser-based naval adventure game where you explore uncharted waters, encounter mysterious events, and engage in thrilling ship-to-ship combat. Navigate treacherous seas, discover hidden treasures, and outmaneuver enemy vessels in your quest for maritime supremacy!
 
-**Play online now:** [Rogue Waters](https://orion-north.github.io/Rogue_Waters/) IN FULLSCREEN!
+**Play online now:** [Bloondubs](https://orion-north.github.io/Bloondubs/) IN FULLSCREEN!
 
 ---
 
