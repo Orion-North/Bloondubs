@@ -182,14 +182,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 const tile = new Tile(x, y, tileElement, tileType);
 
-                tileElement.addEventListener("click", () => handleTileClick(tile));
+                tile.element.addEventListener("click", () => handleTileClick(tile));
 
                 // Initially hide the tile content (fog of war)
-                tileElement.innerText = "";
-                tileElement.classList.add("hidden");
+                tile.element.innerText = "";
+                tile.element.classList.add("hidden");
 
                 tiles.push(tile);
-                mapContainer.appendChild(tileElement);
+                mapContainer.appendChild(tile.element);
             }
         }
 
@@ -276,6 +276,12 @@ window.addEventListener('DOMContentLoaded', () => {
         { type: "trader", message: "You encounter a friendly trader." }
     ];
 
+    // Buffs management
+    let temporaryBuffs = {
+        player: {},
+        enemy: {}
+    };
+
     function handleRandomEvent() {
         const event = events[Math.floor(Math.random() * events.length)];
         let eventMessage = event.message;
@@ -309,10 +315,10 @@ window.addEventListener('DOMContentLoaded', () => {
         appendStatus(eventMessage);
     }
 
-    // Combat function updated
+    // Combat functions
     function startCombat() {
         currentState = GameState.COMBAT;
-        fightContainer.style.display = "block";
+        fightContainer.style.display = "flex";
         draw();
         appendStatus(`An enemy ship approaches: ${enemyShip.name}`);
 
@@ -337,7 +343,9 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawBackground();
         playerShip.draw();
-        enemyShip.draw();
+        if (enemyShip) {
+            enemyShip.draw();
+        }
     }
 
     // Draw dynamic water background
@@ -362,7 +370,7 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.globalAlpha = 1.0;
     }
 
-    // Expose playerAction to the global scope
+    // Expose `playerAction` to the global scope
     window.playerAction = function(action) {
         if (currentState !== GameState.COMBAT) {
             appendStatus("You are not in combat.");
