@@ -55,8 +55,8 @@
         /* Game Area: Map and Fight Screen */
         .game-area {
             display: flex;
-            flex-direction: row;
-            align-items: flex-start;
+            flex-direction: column; /* Stack vertically */
+            align-items: center;
             justify-content: center;
             width: 100%;
             max-width: 1200px;
@@ -69,28 +69,35 @@
         /* Map Container */
         #map-container {
             display: grid;
-            grid-template-columns: repeat(5, 70px);
-            grid-template-rows: repeat(5, 70px);
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr); /* Use flexible units */
+            gap: 5px;
             margin: 10px 0;
-            width: max-content;
+            width: 100%;
+            max-width: 350px; /* Limit max width */
             align-self: center;
         }
 
         .tile {
-            width: 70px;
-            height: 70px;
+            width: 100%; /* Fill available grid cell */
+            padding-top: 100%; /* Make it square */
+            position: relative; /* For absolute positioning inside */
             background: #1a1a3a;
             color: #fff;
-            font-size: 30px;
+            font-size: 2em;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 12px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
-            position: relative;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .tile > span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .tile:hover {
@@ -123,13 +130,13 @@
 
         /* Fight Container */
         #fight-container {
-            /* Instead of display: none, use visibility */
             visibility: hidden; /* Hidden by default */
             height: 0;
             overflow: hidden;
             flex-direction: column;
             align-items: center;
-            width: 800px;
+            width: 100%;
+            max-width: 800px;
             margin-top: 20px;
         }
 
@@ -141,13 +148,59 @@
             margin: 10px 0;
             display: block;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
-            width: 800px;
-            height: 400px;
+            width: 100%; /* Make canvas responsive */
+            max-width: 800px;
+            height: auto;
+            aspect-ratio: 2 / 1; /* Maintain aspect ratio */
+            min-width: 600px; /* Set minimum width */
+            min-height: 300px; /* Set minimum height */
+        }
+
+        /* New Health Bar and Ship Name Styling */
+        .health-bars {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            padding: 10px 0;
+        }
+
+        .ship-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        .ship-name {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1em;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .health-bar {
+            width: 100%;
+            background-color: #555;
+            border: 2px solid #000;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 20px;
+        }
+
+        .health-fill {
+            background-color: #ff0000;
+            height: 100%;
+            width: 100%; /* Default to full health */
         }
 
         /* Controls Styling */
         #controls {
             margin: 10px 0 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
         }
 
         button {
@@ -158,7 +211,7 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin: 0 10px;
+            margin: 10px;
             font-size: 14px;
             transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px #2980b9;
@@ -180,7 +233,8 @@
             font-size: 16px;
             color: #f0f0f0;
             margin: 20px auto;
-            width: 800px;
+            width: 100%;
+            max-width: 800px;
             height: 150px;
             background: rgba(0, 0, 0, 0.8);
             padding: 15px;
@@ -192,46 +246,14 @@
             backdrop-filter: blur(5px);
         }
 
-        /* Health Bar Styling */
-        .health-bar {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 10px;
-            background: #555;
-            border-radius: 5px;
-            overflow: hidden;
-            box-shadow: 0 0 5px #000;
-        }
-
-        .health-bar-inner {
-            height: 100%;
-            background: linear-gradient(to right, #ff4d4d, #ff0000);
-            transition: width 0.3s;
-        }
-
         /* Responsive Design */
         @media (max-width: 850px) {
-            #fight-container, #gameCanvas, #status {
-                width: 90%;
-            }
-
-            #map-container {
-                grid-template-columns: repeat(5, 60px);
-                grid-template-rows: repeat(5, 60px);
-            }
-
-            .tile {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+            h1 {
+                font-size: 1.5em;
             }
 
             button {
                 padding: 10px 20px;
-                margin: 0 5px;
                 font-size: 12px;
             }
 
@@ -241,16 +263,8 @@
         }
 
         @media (max-width: 600px) {
-            .tile {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-
-            #map-container {
-                grid-template-columns: repeat(5, 50px);
-                grid-template-rows: repeat(5, 50px);
-                gap: 8px;
+            h1 {
+                font-size: 1.2em;
             }
 
             button {
@@ -261,6 +275,26 @@
             #status {
                 font-size: 14px;
                 height: 100px;
+            }
+
+            .health-bars {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .ship-info {
+                width: 80%;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            #status {
+                height: 100px;
+            }
+
+            #gameCanvas {
+                height: 200px;
             }
         }
     </style>
@@ -273,9 +307,25 @@
             <!-- Fight container is hidden when not in combat -->
             <div id="fight-container">
                 <canvas id="gameCanvas"></canvas>
+                <!-- Health Bars and Ship Names -->
+                <div class="health-bars">
+                    <div class="ship-info" id="player-info">
+                        <div class="ship-name" id="player-name"></div>
+                        <div class="health-bar">
+                            <div class="health-fill" id="player-health"></div>
+                        </div>
+                    </div>
+                    <div class="ship-info" id="enemy-info">
+                        <div class="ship-name" id="enemy-name"></div>
+                        <div class="health-bar">
+                            <div class="health-fill" id="enemy-health"></div>
+                        </div>
+                    </div>
+                </div>
                 <div id="controls">
                     <button onclick="playerAction('attack')"><i class="fas fa-crosshairs"></i> Attack</button>
-                    <button onclick="playerAction('move')"><i class="fas fa-arrow-right"></i> Move</button>
+                    <!-- Removed the 'Move' button -->
+                    <!-- <button onclick="playerAction('move')"><i class="fas fa-arrow-right"></i> Move</button> -->
                     <button onclick="playerAction('repair')"><i class="fas fa-tools"></i> Repair</button>
                 </div>
             </div>

@@ -14,6 +14,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const fightContainer = document.getElementById("fight-container");
     const mapContainer = document.getElementById("map-container");
 
+    // Elements for health bars and ship names
+    const playerNameElement = document.getElementById('player-name');
+    const playerHealthElement = document.getElementById('player-health');
+    const enemyNameElement = document.getElementById('enemy-name');
+    const enemyHealthElement = document.getElementById('enemy-health');
+
     // Map and tile setup
     const mapSize = 5;
     const tileTypes = ["🌊", "🏝️", "💀", "💰"];
@@ -32,7 +38,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     class Ship {
-        constructor(name, health, attackPower, position, color, evasion, specialAbility) {
+        constructor(name, health, attackPower, position, color, evasion, specialAbility, emoji) {
             this.name = name;
             this.health = health;
             this.maxHealth = health;
@@ -44,67 +50,19 @@ window.addEventListener('DOMContentLoaded', () => {
             this.baseEvasion = evasion; // To reset temporary buffs
             this.baseAttackPower = attackPower; // To reset temporary buffs
             this.flash = false; // For damage flash effect
+            this.emoji = emoji; // Ship emoji
         }
 
         draw() {
-            // Draw ship as a more complex shape
             ctx.save();
-            ctx.translate(this.position.x + 20, this.position.y + 10); // Center the ship
-            ctx.fillStyle = this.flash ? "#ff0000" : this.color; // Flash red if damaged
-            ctx.beginPath();
 
-            if (this.name === "The Black Pearl") {
-                // Player ship as a triangle pointing right
-                ctx.moveTo(0, -10);
-                ctx.lineTo(40, 0);
-                ctx.lineTo(0, 10);
-            } else {
-                // Enemy ships as different shapes based on type
-                if (this.specialAbility === "highEvasion") {
-                    // High evasion ship as a pentagon
-                    ctx.moveTo(20, -10);
-                    ctx.lineTo(30, -5);
-                    ctx.lineTo(25, 10);
-                    ctx.lineTo(15, 10);
-                    ctx.lineTo(10, -5);
-                } else if (this.specialAbility === "heavyAttack") {
-                    // Heavy attack ship as a hexagon
-                    ctx.moveTo(20, -10);
-                    ctx.lineTo(30, -5);
-                    ctx.lineTo(30, 5);
-                    ctx.lineTo(20, 10);
-                    ctx.lineTo(10, 5);
-                    ctx.lineTo(10, -5);
-                } else {
-                    // Balanced ship as a rectangle
-                    ctx.rect(-20, -10, 40, 20);
-                }
-            }
-
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-
-            // Draw ship's name above the ship
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "14px 'Press Start 2P', monospace";
-            ctx.textAlign = "center";
-            ctx.fillText(`${this.name}`, this.position.x + 20, this.position.y - 15);
-
-            // Draw health bar
-            this.drawHealthBar();
-        }
-
-        drawHealthBar() {
-            const healthPercentage = (this.health / this.maxHealth) * 100;
-            ctx.save();
-            ctx.translate(this.position.x + 20, this.position.y - 10); // Position above the ship
-            ctx.fillStyle = '#555';
-            ctx.fillRect(-20, 0, 40, 5); // Background bar
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(-20, 0, 0.4 * (healthPercentage / 100), 5); // Health amount
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(-20, 0, 40, 5); // Border
+            // Set font size with minimum and maximum limits
+            const fontSize = Math.max(Math.min(Math.floor(canvas.width * 0.1), 100), 40); // Between 40px and 100px
+            ctx.font = `${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = this.flash ? "#ff0000" : this.color;
+            ctx.fillText(this.emoji, this.position.x, this.position.y);
             ctx.restore();
         }
 
@@ -118,6 +76,9 @@ window.addEventListener('DOMContentLoaded', () => {
             appendStatus(`${this.name} takes ${damage} damage! Current health: ${this.health}`);
             this.flash = true;
             draw(); // Update the canvas immediately
+
+            // Update health bar
+            updateHealthBars();
 
             // Attack animation
             animateAttack(attackerPosition, this.position);
@@ -136,6 +97,10 @@ window.addEventListener('DOMContentLoaded', () => {
             const repairAmount = Math.min(10, this.maxHealth - this.health);
             this.health += repairAmount;
             appendStatus(`${this.name} repairs for ${repairAmount} health!`);
+
+            // Update health bar
+            updateHealthBars();
+
             return repairAmount;
         }
 
@@ -148,9 +113,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Enemy ship types with different stats and abilities
     const enemyTypes = [
-        { name: "Schooner", health: 50, attackPower: 10, evasion: 30, color: "#ff7f50", specialAbility: "highEvasion" },
-        { name: "Frigate", health: 80, attackPower: 15, evasion: 15, color: "#ff6347", specialAbility: "balanced" },
-        { name: "Man-of-War", health: 120, attackPower: 25, evasion: 5, color: "#ff4500", specialAbility: "heavyAttack" },
+        { name: "Schooner", health: 50, attackPower: 10, evasion: 30, color: "#ff7f50", specialAbility: "highEvasion", emoji: "⛵" },
+        { name: "Frigate", health: 80, attackPower: 15, evasion: 15, color: "#ff6347", specialAbility: "balanced", emoji: "🚤" },
+        { name: "Man-of-War", health: 120, attackPower: 25, evasion: 5, color: "#ff4500", specialAbility: "heavyAttack", emoji: "🚢" },
     ];
 
     function createRandomEnemy() {
@@ -167,15 +132,16 @@ window.addEventListener('DOMContentLoaded', () => {
             enemyStats.name,
             enemyStats.health,
             enemyStats.attackPower,
-            { x: 600, y: 200 },
+            { x: 0, y: 0 }, // Position will be set in resizeCanvas()
             enemyStats.color,
             Math.min(enemyStats.evasion, 100), // Cap evasion at 100
-            enemyStats.specialAbility
+            enemyStats.specialAbility,
+            enemyStats.emoji
         );
     }
 
-    // Initialize player and enemy ships
-    const playerShip = new Ship("The Black Pearl", 100, 20, { x: 50, y: 200 }, "#1e90ff", 20, null);
+    // Initialize player ship
+    const playerShip = new Ship("The Black Pearl", 100, 20, { x: 0, y: 0 }, "#1e90ff", 20, null, "🛥️");
     let enemyShip = null; // No enemy at the start
 
     function updateStatus(message) {
@@ -187,6 +153,17 @@ window.addEventListener('DOMContentLoaded', () => {
         statusElement.innerText += `${message}\n`;
         // Auto-scroll to the bottom
         statusElement.scrollTop = statusElement.scrollHeight;
+    }
+
+    // Update health bars and ship names
+    function updateHealthBars() {
+        // Update player health bar
+        const playerHealthPercentage = (playerShip.health / playerShip.maxHealth) * 100;
+        playerHealthElement.style.width = `${playerHealthPercentage}%`;
+
+        // Update enemy health bar
+        const enemyHealthPercentage = (enemyShip.health / enemyShip.maxHealth) * 100;
+        enemyHealthElement.style.width = `${enemyHealthPercentage}%`;
     }
 
     // Generate and render the map with fog of war
@@ -208,7 +185,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 tile.element.addEventListener("click", () => handleTileClick(tile));
 
                 // Initially hide the tile content (fog of war)
-                tile.element.innerText = "";
+                tile.element.innerHTML = "<span></span>"; // Empty content
                 tile.element.classList.add("hidden");
 
                 tiles.push(tile);
@@ -253,7 +230,7 @@ window.addEventListener('DOMContentLoaded', () => {
         tile.revealed = true;
         tile.element.classList.remove("hidden");
         tile.element.classList.add("revealed");
-        tile.element.innerText = ""; // Initially no symbol; revealed when clicked
+        // Initially no symbol; revealed when clicked
     }
 
     function handleTileClick(tile) {
@@ -273,7 +250,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         // Reveal the tile's type when clicked
-        tile.element.innerText = tile.tileType;
+        tile.element.querySelector('span').innerText = tile.tileType;
         tile.used = true; // Mark the tile as used to prevent reuse
         tile.element.classList.remove("revealed");
         tile.element.classList.add("used"); // Change appearance after use
@@ -361,9 +338,18 @@ window.addEventListener('DOMContentLoaded', () => {
         canvas = document.getElementById("gameCanvas");
         ctx = canvas.getContext("2d");
 
-        // Set canvas dimensions
-        canvas.width = 800;
-        canvas.height = 400;
+        // Set canvas dimensions based on container size
+        resizeCanvas();
+
+        // Redraw canvas on window resize
+        window.addEventListener('resize', resizeCanvas);
+
+        // Update ship names
+        playerNameElement.innerText = playerShip.name;
+        enemyNameElement.innerText = enemyShip.name;
+
+        // Update health bars
+        updateHealthBars();
 
         draw();
         appendStatus(`An enemy ship approaches: ${enemyShip.name}`);
@@ -383,9 +369,32 @@ window.addEventListener('DOMContentLoaded', () => {
         fightContainer.style.visibility = "hidden";
         fightContainer.style.height = "0";
 
+        // Remove resize event listener
+        window.removeEventListener('resize', resizeCanvas);
+
         // After combat, reveal neighbors of current position
         const currentTile = getTileAt(playerPosition.x, playerPosition.y);
         getNeighbors(currentTile).forEach(revealTile);
+    }
+
+    // Function to resize canvas and update ship positions
+    function resizeCanvas() {
+        // Get the computed width and height of the canvas element
+        const computedStyle = getComputedStyle(canvas);
+        canvas.width = Math.max(parseInt(computedStyle.width), 600); // Minimum width 600px
+        canvas.height = Math.max(parseInt(computedStyle.height), 300); // Minimum height 300px
+
+        // Update ship positions to prevent overlapping
+        const shipSeparation = canvas.width * 0.4; // Increase separation
+        playerShip.position.x = (canvas.width - shipSeparation) / 2;
+        playerShip.position.y = canvas.height / 2;
+
+        if (enemyShip) {
+            enemyShip.position.x = (canvas.width + shipSeparation) / 2;
+            enemyShip.position.y = canvas.height / 2;
+        }
+
+        draw(); // Redraw the canvas content
     }
 
     // Draw ships and background on canvas
@@ -409,9 +418,15 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.globalAlpha = 0.3; // Set transparency for the waves
         for (let i = 0; i < waveCount; i++) {
             ctx.beginPath();
-            ctx.moveTo(0, 80 + i * 40);
-            ctx.quadraticCurveTo(canvas.width / 4, 80 + i * 40 + 20, canvas.width / 2, 80 + i * 40);
-            ctx.quadraticCurveTo(3 * canvas.width / 4, 80 + i * 40 - 20, canvas.width, 80 + i * 40);
+            ctx.moveTo(0, (canvas.height / waveCount) * i);
+            ctx.quadraticCurveTo(
+                canvas.width / 4, (canvas.height / waveCount) * i + 20,
+                canvas.width / 2, (canvas.height / waveCount) * i
+            );
+            ctx.quadraticCurveTo(
+                (3 * canvas.width) / 4, (canvas.height / waveCount) * i - 20,
+                canvas.width, (canvas.height / waveCount) * i
+            );
             ctx.lineTo(canvas.width, canvas.height);
             ctx.lineTo(0, canvas.height);
             ctx.closePath();
@@ -426,8 +441,8 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.strokeStyle = '#ff0000';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(attackerPosition.x + 20, attackerPosition.y + 10);
-        ctx.lineTo(targetPosition.x + 20, targetPosition.y + 10);
+        ctx.moveTo(attackerPosition.x, attackerPosition.y);
+        ctx.lineTo(targetPosition.x, targetPosition.y);
         ctx.stroke();
         ctx.restore();
 
@@ -454,9 +469,6 @@ window.addEventListener('DOMContentLoaded', () => {
             const damage = Math.floor(Math.random() * playerShip.attackPower) + 1; // Ensure at least 1 damage
             enemyShip.takeDamage(damage, playerShip.position);
             result += `You attacked and dealt ${damage} damage! `;
-        } else if (action === "move") {
-            playerShip.position.x = Math.min(playerShip.position.x + 20, canvas.width - 40); // Prevent moving off-canvas
-            result += "You moved closer to the enemy. ";
         } else if (action === "repair") {
             const repairAmount = playerShip.repair();
             result += `You repaired your ship for ${repairAmount} health! `;
@@ -488,6 +500,9 @@ window.addEventListener('DOMContentLoaded', () => {
             appendStatus("Your ship has been destroyed!");
             // Handle game over state if needed
         }
+
+        // Process end-of-turn effects, such as removing temporary buffs
+        processEndOfTurn();
     };
 
     // Process end-of-turn effects, such as removing temporary buffs
