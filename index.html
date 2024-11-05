@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Tags and Title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rogue Waters</title>
-    <!-- Load the Press Start 2P font from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Bloondubs</title>
+
+    <!-- Google Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Updated Font Awesome CDN Link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-t4E9WDpO4UK0jNQ0b+JQ27gDGD3RbIybaCAJ1cPjkE0wNN4xsSJ2K4zJMWJg/VB1qf8LOK6YBVPRq0H+gJZfTg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Stylesheet -->
     <style>
         /* Reset and Global Styles */
         * {
@@ -18,20 +24,21 @@
             width: 100%;
             height: 100%;
             overflow: hidden; /* Prevent scrolling */
-            font-family: 'Press Start 2P', cursive, Arial, sans-serif;
+            font-family: 'Montserrat', Arial, sans-serif;
             background: linear-gradient(to bottom, #00334d, #001f33);
             color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
         }
 
         h1 {
-            font-size: 1.5em;
+            font-size: 2em;
             color: #ffd700;
-            margin: 10px 0;
+            margin: 20px 0;
             text-shadow: 2px 2px #000;
+            font-family: 'Press Start 2P', cursive;
         }
 
         /* Main Container */
@@ -42,6 +49,7 @@
             width: 100%;
             flex: 1;
             padding: 10px;
+            overflow: hidden; /* Prevent overflow */
         }
 
         /* Game Area: Map and Fight Screen */
@@ -55,37 +63,39 @@
             flex: 1;
             gap: 20px;
             overflow: hidden; /* Prevent overflow */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
         }
 
         /* Map Container */
         #map-container {
             display: grid;
-            grid-template-columns: repeat(5, 60px);
-            grid-template-rows: repeat(5, 60px);
-            gap: 8px;
+            grid-template-columns: repeat(5, 70px);
+            grid-template-rows: repeat(5, 70px);
+            gap: 10px;
             margin: 10px 0;
             width: max-content;
+            align-self: center;
         }
 
         .tile {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             background: #1a1a3a;
             color: #fff;
-            font-size: 24px;
+            font-size: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
             position: relative;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
         .tile:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 10px #ffd700;
+            box-shadow: 0 0 15px #ffd700;
         }
 
         .hidden {
@@ -94,13 +104,33 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
         }
 
+        .revealed {
+            background: #1a1a3a;
+            cursor: default;
+            animation: reveal 0.5s forwards;
+        }
+
+        @keyframes reveal {
+            from { transform: rotateY(90deg); }
+            to { transform: rotateY(0deg); }
+        }
+
+        .used {
+            background: #333;
+            color: #555;
+            cursor: default;
+        }
+
         /* Fight Container */
         #fight-container {
-            display: none; /* Hidden by default */
+            /* Instead of display: none, use visibility */
+            visibility: hidden; /* Hidden by default */
+            height: 0;
+            overflow: hidden;
             flex-direction: column;
             align-items: center;
             width: 800px;
-            height: 400px;
+            margin-top: 20px;
         }
 
         /* Canvas Styling */
@@ -122,15 +152,15 @@
 
         button {
             font-family: 'Press Start 2P', cursive, Arial, sans-serif;
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: #3498db;
             color: #f0f0f0;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             margin: 0 10px;
-            font-size: 12px;
-            transition: background 0.3s, transform 0.2s;
+            font-size: 14px;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px #2980b9;
         }
 
@@ -141,23 +171,45 @@
 
         button:hover {
             background: #2980b9;
+            box-shadow: 0 6px #1c5d8a;
         }
 
         /* Status Area Styling */
         #status {
-            font-family: 'Press Start 2P', cursive, monospace;
-            font-size: 14px;
+            font-family: 'Montserrat', monospace;
+            font-size: 16px;
             color: #f0f0f0;
-            margin: 10px auto;
+            margin: 20px auto;
             width: 800px;
             height: 150px;
-            background: #000;
-            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
             overflow-y: auto;
             white-space: pre-line;
             border: 2px solid #fff;
             border-radius: 8px;
             box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Health Bar Styling */
+        .health-bar {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 10px;
+            background: #555;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 5px #000;
+        }
+
+        .health-bar-inner {
+            height: 100%;
+            background: linear-gradient(to right, #ff4d4d, #ff0000);
+            transition: width 0.3s;
         }
 
         /* Responsive Design */
@@ -167,30 +219,54 @@
             }
 
             #map-container {
-                grid-template-columns: repeat(5, 50px);
-                grid-template-rows: repeat(5, 50px);
+                grid-template-columns: repeat(5, 60px);
+                grid-template-rows: repeat(5, 60px);
             }
 
             .tile {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
             }
 
             button {
-                padding: 8px 16px;
+                padding: 10px 20px;
                 margin: 0 5px;
-                font-size: 10px;
+                font-size: 12px;
             }
 
             #status {
                 height: 120px;
             }
         }
+
+        @media (max-width: 600px) {
+            .tile {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            #map-container {
+                grid-template-columns: repeat(5, 50px);
+                grid-template-rows: repeat(5, 50px);
+                gap: 8px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 10px;
+            }
+
+            #status {
+                font-size: 14px;
+                height: 100px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Rogue Waters</h1>
+    <h1>Bloondubs</h1>
     <div class="main-container">
         <div class="game-area">
             <div id="map-container"></div>
@@ -198,9 +274,9 @@
             <div id="fight-container">
                 <canvas id="gameCanvas"></canvas>
                 <div id="controls">
-                    <button onclick="playerAction('attack')">Attack</button>
-                    <button onclick="playerAction('move')">Move</button>
-                    <button onclick="playerAction('repair')">Repair</button>
+                    <button onclick="playerAction('attack')"><i class="fas fa-crosshairs"></i> Attack</button>
+                    <button onclick="playerAction('move')"><i class="fas fa-arrow-right"></i> Move</button>
+                    <button onclick="playerAction('repair')"><i class="fas fa-tools"></i> Repair</button>
                 </div>
             </div>
         </div>

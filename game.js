@@ -7,15 +7,12 @@ window.addEventListener('DOMContentLoaded', () => {
     };
     let currentState = GameState.EXPLORATION;
 
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    // Declare canvas and context globally
+    let canvas;
+    let ctx;
 
     const fightContainer = document.getElementById("fight-container");
     const mapContainer = document.getElementById("map-container");
-
-    // Set canvas width and height directly to avoid CSS scaling issues
-    canvas.width = 800;
-    canvas.height = 400;
 
     // Map and tile setup
     const mapSize = 5;
@@ -30,6 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
             this.element = element;
             this.tileType = tileType;
             this.revealed = false;
+            this.used = false; // To track if the tile has been used
         }
     }
 
@@ -87,13 +85,30 @@ window.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
             ctx.restore();
 
-            // Draw ship's name and health above the ship
+            // Draw ship's name above the ship
             ctx.fillStyle = "#ffffff";
             ctx.font = "14px 'Press Start 2P', monospace";
-            ctx.fillText(`${this.name} (HP: ${this.health})`, this.position.x - 10, this.position.y - 15);
+            ctx.textAlign = "center";
+            ctx.fillText(`${this.name}`, this.position.x + 20, this.position.y - 15);
+
+            // Draw health bar
+            this.drawHealthBar();
         }
 
-        takeDamage(damage) {
+        drawHealthBar() {
+            const healthPercentage = (this.health / this.maxHealth) * 100;
+            ctx.save();
+            ctx.translate(this.position.x + 20, this.position.y - 10); // Position above the ship
+            ctx.fillStyle = '#555';
+            ctx.fillRect(-20, 0, 40, 5); // Background bar
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(-20, 0, 0.4 * (healthPercentage / 100), 5); // Health amount
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(-20, 0, 40, 5); // Border
+            ctx.restore();
+        }
+
+        takeDamage(damage, attackerPosition) {
             if (Math.random() * 100 < this.evasion) {
                 appendStatus(`${this.name} evades the attack!`);
                 return;
@@ -102,7 +117,15 @@ window.addEventListener('DOMContentLoaded', () => {
             if (this.health < 0) this.health = 0;
             appendStatus(`${this.name} takes ${damage} damage! Current health: ${this.health}`);
             this.flash = true;
-            setTimeout(() => { this.flash = false; draw(); }, 200); // Flash effect
+            draw(); // Update the canvas immediately
+
+            // Attack animation
+            animateAttack(attackerPosition, this.position);
+
+            setTimeout(() => {
+                this.flash = false;
+                draw();
+            }, 200); // Flash effect
         }
 
         isDestroyed() {
@@ -229,7 +252,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (tile.revealed) return;
         tile.revealed = true;
         tile.element.classList.remove("hidden");
-        tile.element.innerText = tile.tileType;
+        tile.element.classList.add("revealed");
+        tile.element.innerText = ""; // Initially no symbol; revealed when clicked
     }
 
     function handleTileClick(tile) {
@@ -243,7 +267,17 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        revealTile(tile);
+        if (tile.used) {
+            appendStatus("This tile has already been used.");
+            return;
+        }
+
+        // Reveal the tile's type when clicked
+        tile.element.innerText = tile.tileType;
+        tile.used = true; // Mark the tile as used to prevent reuse
+        tile.element.classList.remove("revealed");
+        tile.element.classList.add("used"); // Change appearance after use
+
         playerPosition.x = tile.x;
         playerPosition.y = tile.y;
 
@@ -318,7 +352,19 @@ window.addEventListener('DOMContentLoaded', () => {
     // Combat functions
     function startCombat() {
         currentState = GameState.COMBAT;
-        fightContainer.style.display = "flex";
+
+        // Make fight-container visible
+        fightContainer.style.visibility = "visible";
+        fightContainer.style.height = "auto";
+
+        // Initialize canvas and context
+        canvas = document.getElementById("gameCanvas");
+        ctx = canvas.getContext("2d");
+
+        // Set canvas dimensions
+        canvas.width = 800;
+        canvas.height = 400;
+
         draw();
         appendStatus(`An enemy ship approaches: ${enemyShip.name}`);
 
@@ -332,7 +378,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function endCombat() {
         currentState = GameState.EXPLORATION;
-        fightContainer.style.display = "none";
+
+        // Hide fight-container
+        fightContainer.style.visibility = "hidden";
+        fightContainer.style.height = "0";
+
         // After combat, reveal neighbors of current position
         const currentTile = getTileAt(playerPosition.x, playerPosition.y);
         getNeighbors(currentTile).forEach(revealTile);
@@ -356,6 +406,7 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = '#1a1a3a';
+        ctx.globalAlpha = 0.3; // Set transparency for the waves
         for (let i = 0; i < waveCount; i++) {
             ctx.beginPath();
             ctx.moveTo(0, 80 + i * 40);
@@ -365,9 +416,25 @@ window.addEventListener('DOMContentLoaded', () => {
             ctx.lineTo(0, canvas.height);
             ctx.closePath();
             ctx.fill();
-            ctx.globalAlpha = 0.3;
         }
-        ctx.globalAlpha = 1.0;
+        ctx.globalAlpha = 1.0; // Reset transparency
+    }
+
+    // Animate attacks with a line from attacker to target
+    function animateAttack(attackerPosition, targetPosition) {
+        ctx.save();
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(attackerPosition.x + 20, attackerPosition.y + 10);
+        ctx.lineTo(targetPosition.x + 20, targetPosition.y + 10);
+        ctx.stroke();
+        ctx.restore();
+
+        // Clear the line after a short delay
+        setTimeout(() => {
+            draw();
+        }, 200);
     }
 
     // Expose `playerAction` to the global scope
@@ -385,7 +452,7 @@ window.addEventListener('DOMContentLoaded', () => {
         let result = "";
         if (action === "attack") {
             const damage = Math.floor(Math.random() * playerShip.attackPower) + 1; // Ensure at least 1 damage
-            enemyShip.takeDamage(damage);
+            enemyShip.takeDamage(damage, playerShip.position);
             result += `You attacked and dealt ${damage} damage! `;
         } else if (action === "move") {
             playerShip.position.x = Math.min(playerShip.position.x + 20, canvas.width - 40); // Prevent moving off-canvas
@@ -402,7 +469,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const enemyAction = Math.random() < 0.5 ? "attack" : "repair";
             if (enemyAction === "attack") {
                 const damage = Math.floor(Math.random() * enemyShip.attackPower) + 1; // Ensure at least 1 damage
-                playerShip.takeDamage(damage);
+                playerShip.takeDamage(damage, enemyShip.position);
                 result += `The enemy attacked and dealt ${damage} damage!`;
             } else {
                 const repairAmount = enemyShip.repair();
@@ -416,7 +483,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (enemyShip.isDestroyed()) {
             appendStatus("You have defeated the enemy!");
             endCombat();
-        } 
+        }
         if (playerShip.isDestroyed()) {
             appendStatus("Your ship has been destroyed!");
             // Handle game over state if needed
