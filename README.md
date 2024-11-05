@@ -13,7 +13,6 @@
 - **Turn-Based Combat**: Strategically attack or repair during battles.
 - **Random Events**: Experience storms, treasure finds, and pirate ambushes.
 - **Varied Enemy Ships**: Face off against ships with unique abilities.
-- **Responsive Design**: Enjoy seamless play across devices.
 
 ---
 
